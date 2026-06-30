@@ -14,24 +14,25 @@ from .commands import TelegramCommandListener
 from .config import Config
 from .fetchers import build_fetcher
 from .i18n import t
-from .notifier import Notifier, SearchResult
-from .store import SeenStore, SettingsStore
+from .models import Watch
+from .notifier import Notifier, WatchResult
+from .store import SeenStore, SettingsStore, WatchStore
 from .telegram import TelegramNotifier
 
 logger = logging.getLogger("wielenbot")
 
 
-def _summarize(results: list[SearchResult]) -> str:
+def _summarize(results: list[WatchResult]) -> str:
     lines: list[str] = []
     for r in results:
         if r.error:
-            lines.append(f"⚠️ {r.search.name}: {r.error}")
+            lines.append(f"⚠️ {r.name}: {r.error}")
         elif r.seeded:
-            lines.append(f"🌱 {r.search.name}: seeded {r.fetched} existing")
+            lines.append(f"🌱 {r.name}: seeded {r.fetched} existing")
         elif r.new:
-            lines.append(f"✅ {r.search.name}: {r.new} new")
+            lines.append(f"✅ {r.name}: {r.new} new")
         else:
-            lines.append(f"· {r.search.name}: 0 new ({r.fetched} checked)")
+            lines.append(f"· {r.name}: 0 new ({r.fetched} checked)")
     return "\n".join(lines)
 
 
@@ -44,11 +45,20 @@ def run() -> int:
     config = Config.load()
     store = SeenStore(config.db_path)
     settings = SettingsStore(config.db_path)
+    watch_store = WatchStore(config.db_path)
     telegram = TelegramNotifier(config.telegram_bot_token, config.telegram_chat_id)
     fetcher = build_fetcher(config)
 
+    chat_id = config.telegram_chat_id
+
     def current_language() -> str:
-        return settings.get_language(config.telegram_chat_id)
+        return settings.get_language(chat_id)
+
+    def current_watches() -> list[Watch]:
+        # Power-user URL searches from config.yaml are always on; the rest are
+        # managed by the user via /add and stored per chat.
+        config_watches = [Watch(name=s.name, url=s.url) for s in config.searches]
+        return config_watches + watch_store.list(chat_id)
 
     notifier = Notifier(
         fetcher,
@@ -68,14 +78,16 @@ def run() -> int:
     signal.signal(signal.SIGTERM, _handle_signal)
     signal.signal(signal.SIGINT, _handle_signal)
 
-    # Listen for /language and other commands in the background.
-    listener = TelegramCommandListener(telegram, settings, config.telegram_chat_id, stop_event=stop)
+    # Listen for /add, /list, /remove, /language in the background.
+    listener = TelegramCommandListener(
+        telegram, settings, watch_store, chat_id, stop_event=stop
+    )
     listener_thread = threading.Thread(target=listener.run, name="tg-listener", daemon=True)
     listener_thread.start()
 
     logger.info(
-        "wielen-bot started: %d searches, fetcher=%s, every %ds (+/-%ds)",
-        len(config.searches),
+        "wielen-bot started: %d watch(es), fetcher=%s, every %ds (+/-%ds)",
+        len(current_watches()),
         config.fetcher,
         config.poll_interval_seconds,
         config.poll_jitter_seconds,
@@ -86,7 +98,7 @@ def run() -> int:
                 t(
                     "started",
                     current_language(),
-                    count=len(config.searches),
+                    count=len(current_watches()),
                     fetcher=config.fetcher,
                 ),
                 disable_preview=True,
@@ -95,7 +107,7 @@ def run() -> int:
             logger.exception("Could not send startup message")
 
     while not stop.is_set():
-        results = notifier.run_once(config.searches)
+        results = notifier.run_once(current_watches())
         summary = _summarize(results)
         logger.info("Cycle done:\n%s", summary)
         if config.send_status_messages and any(r.error for r in results):
@@ -112,6 +124,7 @@ def run() -> int:
     telegram.close()
     store.close()
     settings.close()
+    watch_store.close()
     logger.info("wielen-bot stopped")
     return 0
 

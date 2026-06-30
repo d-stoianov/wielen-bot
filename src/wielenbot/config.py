@@ -51,7 +51,9 @@ class Config:
     @staticmethod
     def load(config_path: str | None = None) -> "Config":
         path = config_path or os.environ.get("CONFIG_PATH", "config.yaml")
-        searches = load_searches(path)
+        # Watches are managed via the bot; config.yaml searches are an optional
+        # power-user extra, so a missing file is fine.
+        searches = load_searches(path) if Path(path).exists() else ()
 
         fetcher = os.environ.get("FETCHER", "apify").strip().lower()
         if fetcher not in {"apify", "playwright"}:
@@ -100,7 +102,7 @@ def load_searches(path: str | os.PathLike[str]) -> tuple[Search, ...]:
     data = yaml.safe_load(p.read_text()) or {}
     raw_searches = data.get("searches")
     if not raw_searches:
-        raise ValueError(f"{p} has no 'searches:' entries.")
+        return ()
 
     searches: list[Search] = []
     for i, entry in enumerate(raw_searches):
