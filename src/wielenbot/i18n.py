@@ -16,12 +16,22 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "en": (
             "👋 Welcome to <b>wielen-bot</b>!\n"
             "I notify you about new car listings on gaspedaal.nl that match your "
-            "searches.\n\nUse /language to change the language."
+            "watches.\n\n"
+            "<b>Commands</b>\n"
+            "/add — create a new watch\n"
+            "/list — show your watches\n"
+            "/remove &lt;name&gt; — delete a watch\n"
+            "/language — change language"
         ),
         "nl": (
             "👋 Welkom bij <b>wielen-bot</b>!\n"
             "Ik waarschuw je voor nieuwe auto-advertenties op gaspedaal.nl die bij "
-            "je zoekopdrachten passen.\n\nGebruik /language om de taal te wijzigen."
+            "je zoekopdrachten passen.\n\n"
+            "<b>Commando's</b>\n"
+            "/add — nieuwe zoekopdracht maken\n"
+            "/list — je zoekopdrachten tonen\n"
+            "/remove &lt;naam&gt; — zoekopdracht verwijderen\n"
+            "/language — taal wijzigen"
         ),
     },
     "connected": {
@@ -53,6 +63,91 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
     "cmd_language_desc": {
         "en": "Change language",
         "nl": "Taal wijzigen",
+    },
+    "cmd_add_desc": {
+        "en": "Create a new car watch",
+        "nl": "Nieuwe zoekopdracht maken",
+    },
+    "cmd_list_desc": {
+        "en": "Show your watches",
+        "nl": "Je zoekopdrachten tonen",
+    },
+    "cmd_remove_desc": {
+        "en": "Remove a watch",
+        "nl": "Zoekopdracht verwijderen",
+    },
+    # --- /add wizard ---
+    "ask_name": {
+        "en": "📝 Give this watch a name (e.g. <i>Audi A4 daily</i>):",
+        "nl": "📝 Geef deze zoekopdracht een naam (bijv. <i>Audi A4 dagelijks</i>):",
+    },
+    "ask_make": {
+        "en": "🚗 Which make? (e.g. <i>audi</i>)",
+        "nl": "🚗 Welk merk? (bijv. <i>audi</i>)",
+    },
+    "ask_model": {
+        "en": "🔧 Which model? (e.g. <i>a4</i>) — or /skip",
+        "nl": "🔧 Welk model? (bijv. <i>a4</i>) — of /skip",
+    },
+    "ask_year_min": {
+        "en": "📅 Earliest build year? (e.g. <i>2016</i>) — or /skip",
+        "nl": "📅 Vroegste bouwjaar? (bijv. <i>2016</i>) — of /skip",
+    },
+    "ask_year_max": {
+        "en": "📅 Latest build year? (e.g. <i>2020</i>) — or /skip",
+        "nl": "📅 Laatste bouwjaar? (bijv. <i>2020</i>) — of /skip",
+    },
+    "ask_price_max": {
+        "en": "💶 Maximum price in €? (e.g. <i>15000</i>) — or /skip",
+        "nl": "💶 Maximale prijs in €? (bijv. <i>15000</i>) — of /skip",
+    },
+    "ask_km_max": {
+        "en": "🛣 Maximum mileage in km? (e.g. <i>150000</i>) — or /skip",
+        "nl": "🛣 Maximale kilometerstand in km? (bijv. <i>150000</i>) — of /skip",
+    },
+    "ask_fuel": {
+        "en": "⛽ Fuel type? <i>petrol / diesel / electric / hybrid</i> — or /skip",
+        "nl": "⛽ Brandstof? <i>benzine / diesel / elektrisch / hybride</i> — of /skip",
+    },
+    "invalid_number": {
+        "en": "⚠️ Please send a number, or /skip.",
+        "nl": "⚠️ Stuur een getal, of /skip.",
+    },
+    "invalid_fuel": {
+        "en": "⚠️ Pick one of: petrol, diesel, electric, hybrid — or /skip.",
+        "nl": "⚠️ Kies uit: benzine, diesel, elektrisch, hybride — of /skip.",
+    },
+    "watch_created": {
+        "en": "✅ Watch created:\n<b>{name}</b> — {summary}\nI'll alert you on new matches.",
+        "nl": "✅ Zoekopdracht aangemaakt:\n<b>{name}</b> — {summary}\nIk waarschuw je bij nieuwe treffers.",
+    },
+    "watch_exists": {
+        "en": "⚠️ You already have a watch named <b>{name}</b>. Pick another name:",
+        "nl": "⚠️ Je hebt al een zoekopdracht met de naam <b>{name}</b>. Kies een andere naam:",
+    },
+    "add_cancelled": {
+        "en": "❌ Cancelled.",
+        "nl": "❌ Geannuleerd.",
+    },
+    "list_empty": {
+        "en": "You have no watches yet. Use /add to create one.",
+        "nl": "Je hebt nog geen zoekopdrachten. Gebruik /add om er een te maken.",
+    },
+    "list_header": {
+        "en": "🔎 <b>Your watches</b>:",
+        "nl": "🔎 <b>Je zoekopdrachten</b>:",
+    },
+    "remove_usage": {
+        "en": "Usage: <code>/remove &lt;name&gt;</code>. See /list for names.",
+        "nl": "Gebruik: <code>/remove &lt;naam&gt;</code>. Zie /list voor namen.",
+    },
+    "watch_removed": {
+        "en": "🗑 Removed watch <b>{name}</b>.",
+        "nl": "🗑 Zoekopdracht <b>{name}</b> verwijderd.",
+    },
+    "watch_not_found": {
+        "en": "⚠️ No watch named <b>{name}</b>. See /list.",
+        "nl": "⚠️ Geen zoekopdracht met de naam <b>{name}</b>. Zie /list.",
     },
 }
 
