@@ -27,11 +27,10 @@ def test_missing_file_raises(tmp_path):
         load_searches(tmp_path / "nope.yaml")
 
 
-def test_empty_searches_raises(tmp_path):
+def test_empty_searches_returns_empty(tmp_path):
     cfg = tmp_path / "config.yaml"
     cfg.write_text("searches: []\n")
-    with pytest.raises(ValueError):
-        load_searches(cfg)
+    assert load_searches(cfg) == ()
 
 
 def test_entry_missing_url_raises(tmp_path):
