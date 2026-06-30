@@ -13,7 +13,7 @@ from collections.abc import Iterable, Sequence
 from pathlib import Path
 
 from .i18n import DEFAULT_LANGUAGE, normalize_language
-from .models import Listing
+from .models import Listing, Watch
 
 
 def _ensure_parent(path: Path) -> None:
@@ -119,6 +119,108 @@ class SettingsStore:
                 (str(chat_id), lang),
             )
             self._conn.commit()
+
+    def close(self) -> None:
+        with self._lock:
+            self._conn.close()
+
+
+_WATCH_COLUMNS = (
+    "name",
+    "make",
+    "model",
+    "year_min",
+    "year_max",
+    "price_max",
+    "km_max",
+    "fuel",
+    "url",
+)
+
+
+class WatchStore:
+    """Per-chat car watches, created and removed at runtime via bot commands.
+
+    Written by the command listener and read by the polling loop, so (like
+    SettingsStore) the connection allows cross-thread use behind a lock.
+    """
+
+    def __init__(self, db_path: str | Path) -> None:
+        self._path = Path(db_path)
+        _ensure_parent(self._path)
+        self._lock = threading.Lock()
+        self._conn = sqlite3.connect(str(self._path), check_same_thread=False)
+        self._conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS watches (
+                chat_id   TEXT NOT NULL,
+                name      TEXT NOT NULL,
+                make      TEXT,
+                model     TEXT,
+                year_min  INTEGER,
+                year_max  INTEGER,
+                price_max INTEGER,
+                km_max    INTEGER,
+                fuel      TEXT,
+                url       TEXT,
+                created   TEXT NOT NULL DEFAULT (datetime('now')),
+                PRIMARY KEY (chat_id, name)
+            )
+            """
+        )
+        self._conn.commit()
+
+    def add(self, chat_id: str, watch: Watch) -> bool:
+        """Insert a watch. Returns False if the name is already taken for this chat."""
+        with self._lock:
+            try:
+                self._conn.execute(
+                    f"""
+                    INSERT INTO watches (chat_id, {", ".join(_WATCH_COLUMNS)})
+                    VALUES (?, {", ".join("?" for _ in _WATCH_COLUMNS)})
+                    """,
+                    (str(chat_id), *(getattr(watch, col) for col in _WATCH_COLUMNS)),
+                )
+                self._conn.commit()
+                return True
+            except sqlite3.IntegrityError:
+                return False
+
+    def list(self, chat_id: str) -> list[Watch]:
+        with self._lock:
+            cur = self._conn.execute(
+                f"SELECT {', '.join(_WATCH_COLUMNS)} FROM watches "
+                "WHERE chat_id = ? ORDER BY created",
+                (str(chat_id),),
+            )
+            rows = cur.fetchall()
+        return [Watch(**dict(zip(_WATCH_COLUMNS, row))) for row in rows]
+
+    def get(self, chat_id: str, name: str) -> Watch | None:
+        with self._lock:
+            cur = self._conn.execute(
+                f"SELECT {', '.join(_WATCH_COLUMNS)} FROM watches "
+                "WHERE chat_id = ? AND name = ?",
+                (str(chat_id), name),
+            )
+            row = cur.fetchone()
+        return Watch(**dict(zip(_WATCH_COLUMNS, row))) if row else None
+
+    def remove(self, chat_id: str, name: str) -> bool:
+        with self._lock:
+            cur = self._conn.execute(
+                "DELETE FROM watches WHERE chat_id = ? AND name = ?",
+                (str(chat_id), name),
+            )
+            self._conn.commit()
+            return cur.rowcount > 0
+
+    def count(self, chat_id: str) -> int:
+        with self._lock:
+            cur = self._conn.execute(
+                "SELECT COUNT(*) FROM watches WHERE chat_id = ?", (str(chat_id),)
+            )
+            return int(cur.fetchone()[0])
 
     def close(self) -> None:
         with self._lock:
