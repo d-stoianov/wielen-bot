@@ -1,0 +1,18 @@
+# Saved searches. Copy this file to config.yaml and edit.
+#
+# Each search is a gaspedaal.nl search-results URL plus a friendly name.
+# How to get a URL:
+#   1. Go to https://www.gaspedaal.nl and set up your filters
+#      (merk/model, prijs, bouwjaar, km-stand, brandstof, straal + postcode, ...).
+#   2. IMPORTANT: sort by newest first so brand-new listings show up immediately.
+#      Add  srt=df-a  to the query string (df = datum, a = aflopend/newest first).
+#   3. Copy the full URL from the address bar into `url` below.
+#
+# Examples (replace with your own):
+
+searches:
+  - name: "Audi A4 Avant < €15k, < 150k km"
+    url: "https://www.gaspedaal.nl/audi/a4?srt=df-a&pmax=15000&kmax=150000&bmin=2015"
+
+  - name: "VW Golf, diesel, near Amsterdam"
+    url: "https://www.gaspedaal.nl/volkswagen/golf?srt=df-a&brst=diesel&pmax=12000"

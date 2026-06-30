@@ -1,0 +1,13 @@
+[project]
+name = "wielen-bot"
+version = "0.1.0"
+description = "Telegram bot that watches gaspedaal.nl car searches and notifies on new listings"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.setuptools.packages.find]
+where = ["src"]
