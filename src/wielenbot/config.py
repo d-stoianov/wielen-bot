@@ -70,9 +70,9 @@ class Config:
             fetcher=fetcher,
             apify_token=os.environ.get("APIFY_TOKEN", "").strip(),
             apify_actor_id=os.environ.get(
-                "APIFY_ACTOR_ID", "stealth_mode/gaspedaal-cars-search-scraper"
+                "APIFY_ACTOR_ID", "unfenced-group/gaspedaal-nl-scraper"
             ).strip(),
-            apify_use_proxy=_get_bool("APIFY_USE_PROXY", True),
+            apify_use_proxy=_get_bool("APIFY_USE_PROXY", False),
             playwright_proxy=proxy,
             playwright_headless=_get_bool("PLAYWRIGHT_HEADLESS", True),
             poll_interval_seconds=_get_int("POLL_INTERVAL_SECONDS", 300),

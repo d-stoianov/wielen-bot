@@ -47,7 +47,7 @@ def _price(raw: dict[str, Any]) -> int | None:
     price = raw.get("price")
     if isinstance(price, dict):
         return _to_int(_first(price, "totaal", "totaal_inclusief_btw", "amount", "value"))
-    return _to_int(_first(raw, "prijs", "price", "amount"))
+    return _to_int(_first(raw, "priceEur", "prijs", "price", "amount"))
 
 
 def _title(raw: dict[str, Any]) -> str | None:
@@ -101,7 +101,8 @@ def _source(raw: dict[str, Any]) -> str | None:
                 return str(name)
         elif isinstance(first, str):
             return first
-    return None
+    seller = _first(raw, "sellerName")
+    return str(seller) if seller else None
 
 
 def _image(raw: dict[str, Any]) -> str | None:
@@ -115,7 +116,7 @@ def _image(raw: dict[str, Any]) -> str | None:
             return first
         if isinstance(first, dict):
             return _first(first, "url", "src", "foto_groot")
-    return _first(raw, "image", "thumbnail", "foto")
+    return _first(raw, "imageUrl", "image", "thumbnail", "foto")
 
 
 def _location(raw: dict[str, Any]) -> str | None:
@@ -126,7 +127,8 @@ def _location(raw: dict[str, Any]) -> str | None:
             loc = _first(details, "plaats", "stad", "city", "woonplaats", "location")
             if loc:
                 return str(loc)
-    return _first(raw, "plaats", "city", "location")
+    loc = _first(raw, "sellerCity", "plaats", "city", "location")
+    return str(loc) if loc else None
 
 
 def map_item(raw: dict[str, Any]) -> Listing | None:
@@ -135,7 +137,7 @@ def map_item(raw: dict[str, Any]) -> Listing | None:
         return None
 
     ad_id = _first(raw, "ad_id", "adId", "id", "advertentieId", "vipUrl", "license_plate")
-    url = _first(raw, "url", "link", "vipUrl")
+    url = _first(raw, "sourceListingUrl", "url", "link", "vipUrl")
     if ad_id is None and url is None:
         return None
     if ad_id is None:
@@ -146,9 +148,9 @@ def map_item(raw: dict[str, Any]) -> Listing | None:
         url=str(url) if url else "",
         title=_title(raw) or "Car listing",
         price=_price(raw),
-        mileage_km=_to_int(_algemeen_field(raw, "tellerstand", "km_stand", "kmstand", "mileage", "km")),
+        mileage_km=_to_int(_algemeen_field(raw, "mileageKm", "tellerstand", "km_stand", "kmstand", "mileage", "km")),
         year=_to_int(_algemeen_field(raw, "bouwjaar", "jaar", "year", "registratiejaar")),
-        fuel=(lambda f: str(f) if f else None)(_algemeen_field(raw, "brandstof", "fuel", "brandstof_slug")),
+        fuel=(lambda f: str(f) if f else None)(_algemeen_field(raw, "fuelType", "brandstof", "fuel", "brandstof_slug")),
         location=_location(raw),
         source=_source(raw),
         image_url=_image(raw),
