@@ -1,0 +1,12 @@
+services:
+  wielen-bot:
+    build: .
+    image: wielen-bot
+    container_name: wielen-bot
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      # Dedup state — keep across restarts/redeploys so you aren't re-notified.
+      - ./data:/app/data
+      # Your saved searches (edit config.yaml, then `docker compose up -d`).
+      - ./config.yaml:/app/config.yaml:ro
