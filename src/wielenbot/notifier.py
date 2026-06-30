@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from .fetchers.base import Fetcher
+from .i18n import DEFAULT_LANGUAGE
 from .models import Search
 from .store import SeenStore
 from .telegram import TelegramNotifier
@@ -31,12 +33,14 @@ class Notifier:
         *,
         max_items: int,
         notify_on_first_run: bool,
+        language_provider: Callable[[], str] = lambda: DEFAULT_LANGUAGE,
     ) -> None:
         self._fetcher = fetcher
         self._store = store
         self._telegram = telegram
         self._max_items = max_items
         self._notify_on_first_run = notify_on_first_run
+        self._language_provider = language_provider
 
     def run_search(self, search: Search) -> SearchResult:
         result = SearchResult(search=search)
@@ -59,8 +63,9 @@ class Notifier:
             logger.info("Seeded %d existing listings for %r (no notify)", len(listings), search.name)
             return result
 
+        lang = self._language_provider()
         for listing in new:
-            self._telegram.send_listing(listing, search.name)
+            self._telegram.send_listing(listing, search.name, lang)
         self._store.mark_seen(search.name, [lst.ad_id for lst in new])
         result.new = len(new)
         if new:

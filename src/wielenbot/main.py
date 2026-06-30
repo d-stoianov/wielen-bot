@@ -10,10 +10,12 @@ import sys
 import threading
 import time
 
+from .commands import TelegramCommandListener
 from .config import Config
 from .fetchers import build_fetcher
+from .i18n import t
 from .notifier import Notifier, SearchResult
-from .store import SeenStore
+from .store import SeenStore, SettingsStore
 from .telegram import TelegramNotifier
 
 logger = logging.getLogger("wielenbot")
@@ -41,14 +43,20 @@ def run() -> int:
 
     config = Config.load()
     store = SeenStore(config.db_path)
+    settings = SettingsStore(config.db_path)
     telegram = TelegramNotifier(config.telegram_bot_token, config.telegram_chat_id)
     fetcher = build_fetcher(config)
+
+    def current_language() -> str:
+        return settings.get_language(config.telegram_chat_id)
+
     notifier = Notifier(
         fetcher,
         store,
         telegram,
         max_items=config.max_items_per_search,
         notify_on_first_run=config.notify_on_first_run,
+        language_provider=current_language,
     )
 
     stop = threading.Event()
@@ -60,6 +68,11 @@ def run() -> int:
     signal.signal(signal.SIGTERM, _handle_signal)
     signal.signal(signal.SIGINT, _handle_signal)
 
+    # Listen for /language and other commands in the background.
+    listener = TelegramCommandListener(telegram, settings, config.telegram_chat_id, stop_event=stop)
+    listener_thread = threading.Thread(target=listener.run, name="tg-listener", daemon=True)
+    listener_thread.start()
+
     logger.info(
         "wielen-bot started: %d searches, fetcher=%s, every %ds (+/-%ds)",
         len(config.searches),
@@ -70,8 +83,12 @@ def run() -> int:
     if config.send_status_messages:
         try:
             telegram.send_text(
-                f"🤖 wielen-bot gestart — watching {len(config.searches)} search(es) "
-                f"via {config.fetcher}.",
+                t(
+                    "started",
+                    current_language(),
+                    count=len(config.searches),
+                    fetcher=config.fetcher,
+                ),
                 disable_preview=True,
             )
         except Exception:  # noqa: BLE001
@@ -94,6 +111,7 @@ def run() -> int:
 
     telegram.close()
     store.close()
+    settings.close()
     logger.info("wielen-bot stopped")
     return 0
 
