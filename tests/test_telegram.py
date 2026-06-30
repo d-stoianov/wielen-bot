@@ -19,6 +19,16 @@ def test_format_includes_key_fields_and_link():
     assert 'href="https://www.gaspedaal.nl/ad/1"' in msg
 
 
+def test_link_label_defaults_to_english():
+    msg = format_listing(make_listing("1"), "s")
+    assert ">View listing</a>" in msg
+
+
+def test_link_label_localized_to_dutch():
+    msg = format_listing(make_listing("1"), "s", "nl")
+    assert ">Bekijk advertentie</a>" in msg
+
+
 def test_format_escapes_html():
     listing = make_listing("1", title="BMW <script> & co")
     msg = format_listing(listing, "search & filter")
@@ -40,4 +50,4 @@ def test_format_tolerates_missing_optional_fields():
     msg = format_listing(listing, "minimal")
     # Should still render title + link without raising.
     assert "Audi A4 Avant" in msg
-    assert "Bekijk advertentie" in msg
+    assert "View listing" in msg

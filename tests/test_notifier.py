@@ -27,7 +27,7 @@ class RecordingTelegram:
     def __init__(self) -> None:
         self.sent: list[tuple[str, str]] = []
 
-    def send_listing(self, listing: Listing, search_name: str) -> None:
+    def send_listing(self, listing: Listing, search_name: str, lang: str = "en") -> None:
         self.sent.append((listing.ad_id, search_name))
 
     def send_text(self, text: str, disable_preview: bool = False) -> None:  # pragma: no cover
