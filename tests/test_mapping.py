@@ -39,6 +39,51 @@ def test_maps_apify_shaped_item():
     assert "Audi" in listing.title and "A4" in listing.title
 
 
+def test_maps_unfenced_group_shaped_item():
+    # Real output shape from unfenced-group/gaspedaal-nl-scraper.
+    raw = {
+        "id": "134585154",
+        "url": "https://www.gaspedaal.nl/zoeken#134585154",
+        "title": "Audi A4 - Avant 40 TFSI 204 pk S-tronic S Line Plus",
+        "brand": "Audi",
+        "model": "A4",
+        "year": 2022,
+        "fuelType": "Benzine",
+        "mileageKm": 65259,
+        "priceEur": 33890,
+        "sellerName": "Eurocars Helmond",
+        "sellerCity": "Helmond",
+        "imageUrl": "https://cdn.gaspedaal.nl/images/large/abc.jpg",
+        "sourceListingUrl": None,
+        "source": "gaspedaal.nl",
+        "scrapedAt": "2026-06-30T16:39:00.592Z",
+    }
+
+    listing = map_item(raw)
+
+    assert listing is not None
+    assert listing.ad_id == "134585154"
+    assert listing.url == "https://www.gaspedaal.nl/zoeken#134585154"  # sourceListingUrl null -> url
+    assert listing.price == 33890
+    assert listing.year == 2022
+    assert listing.mileage_km == 65259
+    assert listing.fuel == "Benzine"
+    assert listing.location == "Helmond"
+    assert listing.source == "Eurocars Helmond"
+    assert listing.image_url == "https://cdn.gaspedaal.nl/images/large/abc.jpg"
+
+
+def test_prefers_source_listing_url_when_present():
+    raw = {
+        "id": "1",
+        "url": "https://www.gaspedaal.nl/zoeken#1",
+        "sourceListingUrl": "https://www.autoscout24.nl/aanbod/1",
+    }
+    listing = map_item(raw)
+    assert listing is not None
+    assert listing.url == "https://www.autoscout24.nl/aanbod/1"
+
+
 def test_falls_back_to_url_when_no_id():
     raw = {"url": "https://www.gaspedaal.nl/volkswagen/golf-2018", "prijs": 9000}
     listing = map_item(raw)

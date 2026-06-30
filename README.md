@@ -29,11 +29,24 @@ That's why there are two fetchers — pick one with the `FETCHER` env var:
 
 | `FETCHER`    | Cost | Works from a VPS (datacenter IP)? | Notes |
 |--------------|------|-----------------------------------|-------|
-| `apify`      | Paid (~$20/mo + usage) | ✅ Yes | Hosted scraper runs browsers behind **residential proxies**. Easiest reliable option on a VPS. |
+| `apify`      | Paid | ✅ Yes | Hosted scraper gets past the WAF for you. Easiest reliable option on a VPS. |
 | `playwright` | Free | ⚠️ Usually blocked unless you add a residential proxy | Real headless Chrome. Works great from a **home/Raspberry-Pi (residential) IP**. On a VPS set `PLAYWRIGHT_PROXY` to a cheap residential proxy. |
 
 **Apify is optional and swappable** — it's just one backend behind a common
 interface. The bot's logic (filtering, dedup, Telegram) is identical either way.
+
+### Choosing an Apify actor (`APIFY_ACTOR_ID`)
+
+| Actor | Pricing | Best when |
+|-------|---------|-----------|
+| `unfenced-group/gaspedaal-nl-scraper` *(default)* | **pay-per-result** (~$1.50 / 1,000 results), free WAF bypass | You poll **infrequently** (and stay within Apify's free monthly credit). Set `APIFY_USE_PROXY=false`. |
+| `stealth_mode/gaspedaal-cars-search-scraper` | **flat ~$20/mo** + usage | You poll **frequently** — a flat rate beats per-result at high volume. Set `APIFY_USE_PROXY=true`. |
+
+> 💡 **Cost math for pay-per-result:** cost ≈ `searches × MAX_ITEMS_PER_SEARCH ×
+> polls-per-month × $1.50/1000`. Polling is what runs up the bill, so for the
+> `unfenced-group` actor keep `MAX_ITEMS_PER_SEARCH` small (8–10) and
+> `POLL_INTERVAL_SECONDS` generous (1800s+). If you want minute-fresh alerts on
+> many searches, the flat-rate `stealth_mode` actor is cheaper overall.
 
 ### Which should I use?
 - **Home server / Raspberry Pi** → `FETCHER=playwright`, no proxy needed. Free.
