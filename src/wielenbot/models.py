@@ -14,6 +14,26 @@ class Search:
 
 
 @dataclass(frozen=True)
+class Watch:
+    """A named, filterable car watch managed by the user via the bot.
+
+    make/model drive the gaspedaal search path; the remaining fields are applied
+    as client-side filters on the fetched listings. `url` lets a power user pin a
+    raw gaspedaal URL instead of make/model.
+    """
+
+    name: str
+    make: str | None = None
+    model: str | None = None
+    year_min: int | None = None
+    year_max: int | None = None
+    price_max: int | None = None
+    km_max: int | None = None
+    fuel: str | None = None  # canonical: petrol | diesel | electric | hybrid
+    url: str | None = None
+
+
+@dataclass(frozen=True)
 class Listing:
     """A normalized car listing, independent of which fetcher produced it.
 
